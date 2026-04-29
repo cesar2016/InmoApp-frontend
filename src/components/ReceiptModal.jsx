@@ -176,22 +176,20 @@ const ReceiptModal = ({ isOpen, onClose, tenant, onSave }) => {
         const imgWidth = canvas.width;
         const imgHeight = canvas.height;
 
-        // Scale image to fit PDF width
-        const ratio = pdfWidth / imgWidth;
+        // Scale image to fit PDF width AND height so it fits into a single A4 page
+        const marginTop = 20;
+        const marginBottom = 20;
+        const availablePdfHeight = pdfHeight - marginTop - marginBottom;
+
+        const ratio = Math.min(pdfWidth / imgWidth, availablePdfHeight / imgHeight);
         const renderedHeight = imgHeight * ratio;
 
-        // If the rendered image fits on one page, just add it
-        if (renderedHeight <= pdfHeight - 40) {
-            const imgData = canvas.toDataURL('image/png');
-            const marginX = 0;
-            const marginY = 20;
-            pdf.addImage(imgData, 'PNG', marginX, marginY, pdfWidth, renderedHeight);
-            pdf.save(`recibo_${receiptNumber || '000'}.pdf`);
-            return;
-        }
-
-        // Otherwise split canvas into page-sized chunks
-        const pageCanvasHeight = Math.floor(pdfHeight / ratio);
+        // Render scaled image to single page
+        const imgData = canvas.toDataURL('image/png');
+        const marginX = (pdfWidth - imgWidth * ratio) / 2;
+        pdf.addImage(imgData, 'PNG', marginX, marginTop, imgWidth * ratio, renderedHeight);
+        pdf.save(`recibo_${receiptNumber || '000'}.pdf`);
+        return;
         let remainingHeight = imgHeight;
         let offsetY = 0;
         let page = 0;
