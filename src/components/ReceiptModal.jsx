@@ -166,8 +166,29 @@ const ReceiptModal = ({ isOpen, onClose, tenant, onSave }) => {
         const el = document.getElementById('printable-receipt');
         if (!el) return;
 
+        // Ensure the element is fully expanded so html2canvas captures all content
+        const originalStyle = {
+            width: el.style.width || '',
+            height: el.style.height || '',
+            overflow: el.style.overflow || ''
+        };
+        el.style.overflow = 'visible';
+        el.style.height = el.scrollHeight + 'px';
+
         // Render element to canvas at a higher scale for clarity
-        const canvas = await html2canvas(el, { scale: 2, useCORS: true });
+        const canvas = await html2canvas(el, {
+            scale: 2,
+            useCORS: true,
+            width: el.scrollWidth,
+            height: el.scrollHeight,
+            windowWidth: document.documentElement.clientWidth,
+            windowHeight: document.documentElement.clientHeight
+        });
+
+        // Restore original styles
+        el.style.width = originalStyle.width;
+        el.style.height = originalStyle.height;
+        el.style.overflow = originalStyle.overflow;
 
         const pdf = new jsPDF('p', 'pt', 'a4');
         const pdfWidth = pdf.internal.pageSize.getWidth();
