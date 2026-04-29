@@ -166,21 +166,58 @@ const ReceiptModal = ({ isOpen, onClose, tenant, onSave }) => {
         const el = document.getElementById('printable-receipt');
         if (!el) return;
 
+        // Render element to canvas at a higher scale for clarity
         const canvas = await html2canvas(el, { scale: 2, useCORS: true });
-        const imgData = canvas.toDataURL('image/png');
 
-        const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
+        const pdf = new jsPDF('p', 'pt', 'a4');
         const pdfWidth = pdf.internal.pageSize.getWidth();
         const pdfHeight = pdf.internal.pageSize.getHeight();
 
         const imgWidth = canvas.width;
         const imgHeight = canvas.height;
-        const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-        const renderWidth = imgWidth * ratio;
-        const renderHeight = imgHeight * ratio;
-        const marginX = (pdfWidth - renderWidth) / 2;
 
-        pdf.addImage(imgData, 'PNG', marginX, 20, renderWidth, renderHeight);
+        // Scale image to fit PDF width
+        const ratio = pdfWidth / imgWidth;
+        const renderedHeight = imgHeight * ratio;
+
+        // If the rendered image fits on one page, just add it
+        if (renderedHeight <= pdfHeight - 40) {
+            const imgData = canvas.toDataURL('image/png');
+            const marginX = 0;
+            const marginY = 20;
+            pdf.addImage(imgData, 'PNG', marginX, marginY, pdfWidth, renderedHeight);
+            pdf.save(`recibo_${receiptNumber || '000'}.pdf`);
+            return;
+        }
+
+        // Otherwise split canvas into page-sized chunks
+        const pageCanvasHeight = Math.floor(pdfHeight / ratio);
+        let remainingHeight = imgHeight;
+        let offsetY = 0;
+        let page = 0;
+
+        while (remainingHeight > 0) {
+            const chunkHeight = Math.min(pageCanvasHeight, remainingHeight);
+            // Create an offscreen canvas to hold the chunk
+            const pageCanvas = document.createElement('canvas');
+            pageCanvas.width = imgWidth;
+            pageCanvas.height = chunkHeight;
+            const ctx = pageCanvas.getContext('2d');
+            // Draw the chunk from the full canvas
+            ctx.drawImage(canvas, 0, offsetY, imgWidth, chunkHeight, 0, 0, imgWidth, chunkHeight);
+
+            const imgData = pageCanvas.toDataURL('image/png');
+            const renderH = chunkHeight * ratio;
+            const marginY = 20;
+
+            if (page > 0) pdf.addPage();
+            pdf.addImage(imgData, 'PNG', 0, marginY, pdfWidth, renderH);
+
+            remainingHeight -= chunkHeight;
+            offsetY += chunkHeight;
+            page++;
+        }
+
         pdf.save(`recibo_${receiptNumber || '000'}.pdf`);
     };
 
