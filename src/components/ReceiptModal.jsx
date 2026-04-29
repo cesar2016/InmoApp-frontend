@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { X, Printer, Save, FileText, DollarSign, Calendar, Info } from 'lucide-react';
 import api from '../services/api';
 import { useToast } from '../context/ToastContext';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 // Use the absolute path for the generated logo
 const LOGO_URL = "/client_logo.png";
@@ -62,7 +64,7 @@ const ReceiptModal = ({ isOpen, onClose, tenant, onSave }) => {
                             const valB = parseInt(b.period_year) * 12 + parseInt(b.period_month);
                             return valB - valA;
                         });
-                        
+
                         const latest = contractPayments[0];
                         let nextM = parseInt(latest.period_month) + 1;
                         let nextY = parseInt(latest.period_year);
@@ -70,7 +72,7 @@ const ReceiptModal = ({ isOpen, onClose, tenant, onSave }) => {
                             nextM = 1;
                             nextY += 1;
                         }
-                        
+
                         setFormData(prev => ({
                             ...prev,
                             period_month: nextM,
@@ -124,7 +126,7 @@ const ReceiptModal = ({ isOpen, onClose, tenant, onSave }) => {
             // Include active concepts in the note for record keeping
             const activeConcepts = concepts.filter(c => c.active);
             let finalNote = formData.note;
-            
+
             let methodText = `Forma de Pago: ${paymentMethod}`;
             if (paymentMethod === 'Cheque') methodText += ` (N°: ${chequeNumber})`;
             finalNote = finalNote ? `${finalNote}\n\n${methodText}` : methodText;
@@ -142,6 +144,12 @@ const ReceiptModal = ({ isOpen, onClose, tenant, onSave }) => {
             await api.post('/payments', data);
             success('Recibo generado y guardado correctamente');
             if (onSave) onSave();
+            try {
+                // Generar y descargar PDF del recibo (vista de impresión a la derecha)
+                await downloadReceiptPdf();
+            } catch (pdfErr) {
+                console.error('Error al generar PDF del recibo:', pdfErr);
+            }
             // We don't close immediately so the user can print
         } catch (err) {
             error('Error al guardar el recibo');
@@ -152,6 +160,28 @@ const ReceiptModal = ({ isOpen, onClose, tenant, onSave }) => {
 
     const handlePrint = () => {
         window.print();
+    };
+
+    const downloadReceiptPdf = async () => {
+        const el = document.getElementById('printable-receipt');
+        if (!el) return;
+
+        const canvas = await html2canvas(el, { scale: 2, useCORS: true });
+        const imgData = canvas.toDataURL('image/png');
+
+        const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+
+        const imgWidth = canvas.width;
+        const imgHeight = canvas.height;
+        const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+        const renderWidth = imgWidth * ratio;
+        const renderHeight = imgHeight * ratio;
+        const marginX = (pdfWidth - renderWidth) / 2;
+
+        pdf.addImage(imgData, 'PNG', marginX, 20, renderWidth, renderHeight);
+        pdf.save(`recibo_${receiptNumber || '000'}.pdf`);
     };
 
     const months = [
@@ -374,11 +404,11 @@ const ReceiptModal = ({ isOpen, onClose, tenant, onSave }) => {
                                             <td style={{ textAlign: 'right', padding: '0.5rem', borderBottom: '1px solid #eee' }}>{c.subtotal}</td>
                                         </tr>
                                     ))}
-                                    
+
                                     <tr>
                                         <td colSpan="2" style={{ borderBottom: '1px solid #eee', padding: '0.5rem' }}></td>
                                     </tr>
-                                    
+
                                     <tr>
                                         <td style={{ padding: '0.5rem', borderBottom: '1px solid #eee', borderRight: '1px solid #ddd', textAlign: 'right' }}>Saldo Favor</td>
                                         <td style={{ textAlign: 'right', padding: '0.5rem', borderBottom: '1px solid #eee' }}>{formData.credit_balance}</td>
