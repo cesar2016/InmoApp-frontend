@@ -164,66 +164,68 @@ const Maintenances = () => {
             </div>
 
             {showModal && (
-                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }}>
-                    <div className="card" style={{ width: '100%', maxWidth: '550px', position: 'relative', padding: '2.5rem' }}>
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }}>
+                    <div className="card maintenance-modal" style={{ width: '100%', maxWidth: '700px', height: 'min(85vh, 900px)', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
                         <button onClick={() => setShowModal(false)} style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: '#f8fafc', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}>
                             <X size={20} />
                         </button>
 
-                        <div style={{ marginBottom: '2rem' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '0.5rem' }}>
-                                <Wrench size={24} color="var(--primary)" />
-                                <h2 style={{ margin: 0 }}>Registrar Arreglo</h2>
+                        <div style={{ padding: '1.5rem', overflowY: 'auto' }}>
+                            <div style={{ marginBottom: '2rem' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '0.5rem' }}>
+                                    <Wrench size={24} color="var(--primary)" />
+                                    <h2 style={{ margin: 0 }}>Registrar Arreglo</h2>
+                                </div>
+                                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Detalla la reparación realizada y su costo asociado para el balance.</p>
                             </div>
-                            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Detalla la reparación realizada y su costo asociado para el balance.</p>
+
+                            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                                <div>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><HomeIcon size={14} color="var(--secondary)" /> Inmueble Afectado</label>
+                                    <select value={formData.property_id} onChange={e => setFormData({ ...formData, property_id: e.target.value })} required>
+                                        <option value="">Seleccione inmueble...</option>
+                                        {properties.map(p => (
+                                            <option key={p.id} value={p.id}>{p.street} {p.number} ({p.location})</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Edit2 size={14} /> Descripción del Trabajo</label>
+                                    <textarea
+                                        value={formData.description}
+                                        onChange={e => setFormData({ ...formData, description: e.target.value })}
+                                        required
+                                        rows={4}
+                                        placeholder="Ej: Reparación de cañería en baño principal, cambio de grifería..."
+                                        style={{ resize: 'none' }}
+                                    />
+                                </div>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', padding: '1.5rem', background: '#f8fafc', borderRadius: '1rem', border: '1px solid var(--border)' }}>
+                                    <div>
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><DollarSign size={14} /> Costo Total ($)</label>
+                                        <input type="number" value={formData.cost} onChange={e => setFormData({ ...formData, cost: e.target.value })} required style={{ background: 'white' }} placeholder="0.00" />
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Calendar size={14} /> Fecha</label>
+                                        <input type="date" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} required style={{ background: 'white' }} />
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '1rem', background: '#fff7ed', color: '#9a3412', borderRadius: '8px', fontSize: '0.85rem', border: '1px solid #ffedd5' }}>
+                                    <AlertTriangle size={18} />
+                                    <span>Este gasto se deducirá del balance mensual de la propiedad.</span>
+                                </div>
+
+                                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                                    <button type="button" onClick={() => setShowModal(false)} className="btn" style={{ flex: 1, background: '#f1f5f9' }}>Cancelar</button>
+                                    <button type="submit" className="btn btn-primary" style={{ flex: 2 }}>
+                                        Guardar Registro
+                                    </button>
+                                </div>
+                            </form>
                         </div>
-
-                        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                            <div>
-                                <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><HomeIcon size={14} color="var(--secondary)" /> Inmueble Afectado</label>
-                                <select value={formData.property_id} onChange={e => setFormData({ ...formData, property_id: e.target.value })} required>
-                                    <option value="">Seleccione inmueble...</option>
-                                    {properties.map(p => (
-                                        <option key={p.id} value={p.id}>{p.street} {p.number} ({p.location})</option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div>
-                                <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Edit2 size={14} /> Descripción del Trabajo</label>
-                                <textarea
-                                    value={formData.description}
-                                    onChange={e => setFormData({ ...formData, description: e.target.value })}
-                                    required
-                                    rows={4}
-                                    placeholder="Ej: Reparación de cañería en baño principal, cambio de grifería..."
-                                    style={{ resize: 'none' }}
-                                />
-                            </div>
-
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', padding: '1.5rem', background: '#f8fafc', borderRadius: '1rem', border: '1px solid var(--border)' }}>
-                                <div>
-                                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><DollarSign size={14} /> Costo Total ($)</label>
-                                    <input type="number" value={formData.cost} onChange={e => setFormData({ ...formData, cost: e.target.value })} required style={{ background: 'white' }} placeholder="0.00" />
-                                </div>
-                                <div>
-                                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Calendar size={14} /> Fecha</label>
-                                    <input type="date" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} required style={{ background: 'white' }} />
-                                </div>
-                            </div>
-
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '1rem', background: '#fff7ed', color: '#9a3412', borderRadius: '8px', fontSize: '0.85rem', border: '1px solid #ffedd5' }}>
-                                <AlertTriangle size={18} />
-                                <span>Este gasto se deducirá del balance mensual de la propiedad.</span>
-                            </div>
-
-                            <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                                <button type="button" onClick={() => setShowModal(false)} className="btn" style={{ flex: 1, background: '#f1f5f9' }}>Cancelar</button>
-                                <button type="submit" className="btn btn-primary" style={{ flex: 2 }}>
-                                    Guardar Registro
-                                </button>
-                            </div>
-                        </form>
                     </div>
                 </div>
             )}

@@ -953,3 +953,26 @@ tr:hover td {
   transform: translateY(-50%);
   color: var(--text-muted);
 }
+
+/* Mantenimiento modal: arreglar márgenes y hacer responsive */
+.maintenance-modal {
+  padding: 0; /* padding manejado dentro del card para control fino */
+  overflow-y: auto;
+}
+
+@media (max-width: 600px) {
+  .maintenance-modal { max-width: 92vw; }
+}
+
+/* Guarantors form responsiveness: ensure two-column layout collapses on narrow screens */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+@media (max-width: 600px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}

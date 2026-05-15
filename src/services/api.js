@@ -1,7 +1,11 @@
 import axios from 'axios';
 
+// Use `VITE_API_URL` when provided (production). Otherwise default to local backend.
+//const baseURL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api';
+const baseURL = 'https://inmo-app-anmoapp-backend.qiaz7f.easypanel.host/api';
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://127.0.0.1:8191/api',
+  baseURL,
 });
 
 api.interceptors.request.use((config) => {

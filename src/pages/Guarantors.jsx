@@ -189,7 +189,7 @@ const Guarantors = () => {
 
             {showModal && (
                 <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 }}>
-                    <div className="card" style={{ width: '100%', maxWidth: '500px', position: 'relative', padding: '2.5rem' }}>
+                    <div className="card" style={{ width: '100%', maxWidth: '520px', position: 'relative', padding: '2.5rem', overflowY: 'auto', maxHeight: '80vh' }}>
                         <button onClick={() => setShowModal(false)} style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: '#f8fafc', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}>
                             <X size={20} />
                         </button>
@@ -221,7 +221,7 @@ const Guarantors = () => {
                                 <input value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} required placeholder="Calle, Nro, Localidad" />
                             </div>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+                            <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
                                 <div>
                                     <label>WhatsApp</label>
                                     <input value={formData.whatsapp} onChange={e => setFormData({ ...formData, whatsapp: e.target.value })} required placeholder="+54 9..." />

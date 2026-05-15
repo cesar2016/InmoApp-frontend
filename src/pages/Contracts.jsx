@@ -32,6 +32,9 @@ const Contracts = () => {
     const [uploadMode, setUploadMode] = useState('manual');
     const [isUploading, setIsUploading] = useState(false);
     const [extractedData, setExtractedData] = useState(null);
+    const [appliedExtracts, setAppliedExtracts] = useState(false);
+    const [plaintextPreview, setPlaintextPreview] = useState(null);
+    const [showPlaintext, setShowPlaintext] = useState(false);
 
     const fetchData = async () => {
         setLoading(true);
@@ -70,6 +73,75 @@ const Contracts = () => {
             c.rent_amount.toString().includes(search)
         );
     });
+
+    const applyExtractedDataToForm = () => {
+        // Apply extracted data to the main form fields when available
+        if (!extractedData) return;
+
+        // Tenant
+        if (extractedData.tenant) {
+            const t = extractedData.tenant;
+            const foundTenant = tenants.find(tt => (
+                (t.dni && tt.dni && tt.dni.replace(/\D/g, '') === t.dni.replace(/\D/g, '')) ||
+                (!t.dni && t.first_name && tt.first_name && (tt.first_name.toLowerCase() + ' ' + tt.last_name.toLowerCase()) === (t.first_name + ' ' + t.last_name).toLowerCase())
+            ));
+            if (foundTenant) {
+                setFormData(prev => ({ ...prev, tenant_id: foundTenant.id }));
+                setTenantSearch(`${foundTenant.first_name} ${foundTenant.last_name}`);
+            } else {
+                // keep extracted tenant for manual adjust
+                if (extractedData.tenant) {
+                    setTenantSearch(`${extractedData.tenant.first_name || ''} ${extractedData.tenant.last_name || ''}`);
+                }
+            }
+        }
+
+        // Property / Inmueble
+        if (extractedData.property) {
+            const p = extractedData.property;
+            const matchedProp = properties.find(pp => {
+                const streetA = (pp.street || '').toLowerCase();
+                const streetB = (p.street || '').toLowerCase();
+                const numA = String(pp.number || '');
+                const numB = String(p.number || '');
+                return streetA.includes(streetB) && numA.startsWith(numB);
+            });
+            if (matchedProp) {
+                setFormData(prev => ({ ...prev, property_id: matchedProp.id }));
+                setPropSearch(`${matchedProp.street} ${matchedProp.number} (${matchedProp.type})`);
+            } else if (p.street) {
+                setPropSearch(`${p.street} ${p.number || ''}`);
+            }
+        }
+
+        // Owner / Propietario
+        if (extractedData.owner && extractedData.property) {
+            const o = extractedData.owner;
+            const foundOwner = owners.find(oo => (
+                (o.dni && oo.dni && oo.dni.replace(/\D/g, '') === o.dni.replace(/\D/g, '')) ||
+                (o.first_name && oo.first_name && (oo.first_name.toLowerCase() + ' ' + oo.last_name.toLowerCase()) === (o.first_name + ' ' + o.last_name).toLowerCase())
+            ));
+            if (foundOwner) {
+                // Attach owner to the extracted property if possible
+                setExtractedData(prev => ({
+                    ...prev,
+                    property: { ...(prev.property || {}), owner_id: foundOwner.id }
+                }));
+                setOwnerSearch(`${foundOwner.first_name} ${foundOwner.last_name}`);
+            }
+        }
+
+        // Dates and rent
+        if (extractedData.contract) {
+            setFormData(prev => ({
+                ...prev,
+                start_date: extractedData.contract.start_date || prev.start_date,
+                end_date: extractedData.contract.end_date || prev.end_date,
+                rent_amount: (extractedData.contract.rent_amount || '').toString().replace(/[^0-9]/g, '') || prev.rent_amount,
+            }));
+        }
+        setAppliedExtracts(true);
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -115,6 +187,10 @@ const Contracts = () => {
             });
             const data = res.data.data;
             setExtractedData(data);
+            if (data && data.plain_text) {
+                setPlaintextPreview(data.plain_text);
+                setShowPlaintext(true);
+            }
 
             // Auto-match logic immediately after extraction
             if (data) {
@@ -324,7 +400,8 @@ const Contracts = () => {
                                             <span className="badge badge-success">Activo</span>
                                         ) : (
                                             <span className="badge" style={{ background: '#f1f5f9', color: '#64748b' }}>Finalizado</span>
-                                        )}
+                                    )}
+                                {extractedData && extractedData.plain_text && null}
                                     </td>
                                     <td>
                                         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
@@ -369,6 +446,11 @@ const Contracts = () => {
                                     <FileText size={24} className="text-secondary" />
                                     <h2 style={{ margin: 0 }}>Detalle de Contrato</h2>
                                 </div>
+                                {extractedData && !appliedExtracts && (
+                                    <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                                        <button className="btn" onClick={applyExtractedDataToForm}>Aplicar datos extraídos</button>
+                                    </div>
+                                )}
                                 <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Información completa sobre el acuerdo de locación.</p>
                             </div>
                             <div className={`badge ${selectedContract.is_active ? 'badge-success' : ''}`} style={{ fontSize: '1rem', padding: '0.5rem 1rem' }}>
@@ -439,6 +521,23 @@ const Contracts = () => {
                         <div style={{ marginBottom: '2.5rem' }}>
                             <h2 style={{ marginBottom: '0.25rem' }}>Nuevo Contrato</h2>
                             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Vincula un inquilino con una propiedad disponible.</p>
+                            {extractedData?.extension && (
+                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '0.25rem 0.5rem', borderRadius: '6px', border: '1px solid var(--border)', background: '#f8fafc', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+                                    <Info size={14} /> Formato detectado: {String(extractedData.extension).toUpperCase()}
+                                </div>
+                            )}
+                        {plaintextPreview && (
+                          <div style={{ marginTop: '1rem' }}>
+                            <button className="btn" onClick={() => setShowPlaintext(!showPlaintext)} style={{ marginBottom: '0.5rem' }}>
+                              {showPlaintext ? 'Ocultar texto plano' : 'Ver texto plano'}
+                            </button>
+                            {showPlaintext && (
+                              <pre style={{ whiteSpace: 'pre-wrap', maxHeight: '40vh', overflow: 'auto', padding: '1rem', background: '#f6f6f6', borderRadius: '6px' }}>
+                                {plaintextPreview}
+                              </pre>
+                            )}
+                          </div>
+                        )}
                         </div>
 
                         {!extractedData && (
@@ -460,13 +559,13 @@ const Contracts = () => {
 
                         {uploadMode === 'smart' && !extractedData ? (
                             <div className="upload-zone" style={{ border: '2px dashed var(--border)', borderRadius: '1.5rem', padding: '4rem 2rem', textAlign: 'center', background: '#f8fafc', transition: 'all 0.3s' }}>
-                                <input
-                                    type="file"
-                                    id="contract-upload"
-                                    hidden
-                                    onChange={handleFileUpload}
-                                    accept=".pdf,.doc,.docx"
-                                />
+                                        <input
+                                            type="file"
+                                            id="contract-upload"
+                                            hidden
+                                            onChange={handleFileUpload}
+                                            accept=".pdf,.doc,.docx,.odt"
+                                        />
                                 {isUploading ? (
                                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
                                         <Loader2 size={48} className="text-primary animate-spin" />
@@ -485,7 +584,7 @@ const Contracts = () => {
                                     </label>
                                 )}
                             </div>
-                        ) : extractedData ? (
+                                ) : extractedData ? (
                             <div style={{ animation: 'fadeIn 0.4s ease-out' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '2rem', padding: '1rem', background: 'rgba(22, 163, 74, 0.1)', borderRadius: '12px', border: '1px solid rgba(22, 163, 74, 0.2)' }}>
                                     <CheckCircle2 size={24} className="text-success" />
