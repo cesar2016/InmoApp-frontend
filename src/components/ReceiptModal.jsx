@@ -299,6 +299,25 @@ const ReceiptModal = ({ isOpen, onClose, tenant, onSave }) => {
 
                         <div className="form-row" style={{ marginTop: '-0.5rem', marginBottom: '1rem' }}>
                             <div className="form-group flex-1">
+                                <label>N° Recibo</label>
+                                <input
+                                    type="number"
+                                    value={receiptNumber}
+                                    onChange={e => setReceiptNumber(e.target.value)}
+                                />
+                            </div>
+                            <div className="form-group flex-1">
+                                <label>Total Cuotas</label>
+                                <input
+                                    type="text"
+                                    value={totalMonths}
+                                    onChange={e => setTotalMonths(e.target.value)}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="form-row" style={{ marginTop: '-0.5rem', marginBottom: '1rem' }}>
+                            <div className="form-group flex-1">
                                 <label>Forma de Pago</label>
                                 <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)}>
                                     <option value="Contado Eft.">Contado Eft.</option>

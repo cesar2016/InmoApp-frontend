@@ -164,7 +164,7 @@ const Guarantors = () => {
                                         {g.tenant ? (
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                 <User size={14} color="var(--primary)" />
-                                                <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>{g.tenant.first_name} {g.tenant.last_name}</span>
+                                                <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>{g.tenant?.first_name || 'N/A'} {g.tenant?.last_name || ''}</span>
                                             </div>
                                         ) : (
                                             <span className="badge" style={{ background: '#f1f5f9', color: '#64748b' }}>Sin asignar</span>

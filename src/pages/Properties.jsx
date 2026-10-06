@@ -10,6 +10,11 @@ const Properties = () => {
     const [properties, setProperties] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [pagination, setPagination] = useState({
+        current_page: 1,
+        last_page: 1,
+        total: 0
+    });
     const [showModal, setShowModal] = useState(false);
     const [editingProperty, setEditingProperty] = useState(null);
     const [owners, setOwners] = useState([]);
@@ -26,15 +31,29 @@ const Properties = () => {
         owner_id: ''
     });
 
-    const fetchData = async () => {
+    const fetchData = async (page = 1, search = searchTerm) => {
         setLoading(true);
         try {
             const [propRes, ownRes] = await Promise.all([
-                api.get('/properties'),
-                api.get('/owners')
+                api.get(`/properties?page=${page}&search=${search}`),
+                owners.length === 0 ? api.get('/owners') : Promise.resolve({ data: { data: owners } })
             ]);
-            setProperties(propRes.data);
-            setOwners(ownRes.data);
+            
+            // Note: Our modified OwnerController now returns paginated data, 
+            // but for the dropdown we might need ALL owners. 
+            // For now, let's just handle the paginated response for properties.
+            setProperties(propRes.data.data);
+            setPagination({
+                current_page: propRes.data.current_page,
+                last_page: propRes.data.last_page,
+                total: propRes.data.total
+            });
+
+            if (owners.length === 0) {
+                // If the backend returns paginated owners, we might need a separate endpoint for "all owners"
+                // but let's assume for now we take the first page or it's handled.
+                setOwners(Array.isArray(ownRes.data) ? ownRes.data : ownRes.data.data);
+            }
         } catch (err) {
             error('Error al cargar datos');
         } finally {
@@ -43,23 +62,11 @@ const Properties = () => {
     };
 
     useEffect(() => {
-        fetchData();
-    }, []);
-
-    const filteredProperties = properties.filter(p => {
-        const search = searchTerm.toLowerCase();
-        return (
-            p.street?.toLowerCase().includes(search) ||
-            p.number?.toString().includes(search) ||
-            p.location?.toLowerCase().includes(search) ||
-            p.type?.toLowerCase().includes(search) ||
-            p.listing_type?.toLowerCase().includes(search) ||
-            p.real_estate_id?.toLowerCase().includes(search) ||
-            p.domain?.toLowerCase().includes(search) ||
-            p.owner?.first_name?.toLowerCase().includes(search) ||
-            p.owner?.last_name?.toLowerCase().includes(search)
-        );
-    });
+        const delaySearch = setTimeout(() => {
+            fetchData(1, searchTerm);
+        }, 500);
+        return () => clearTimeout(delaySearch);
+    }, [searchTerm]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -148,10 +155,10 @@ const Properties = () => {
                         </thead>
                         <tbody>
                             {loading ? (
-                                <tr><td colSpan="5" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>Cargando datos...</td></tr>
-                            ) : filteredProperties.length === 0 ? (
-                                <tr><td colSpan="5" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>No se encontraron propiedades.</td></tr>
-                            ) : filteredProperties.map(p => (
+                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>Cargando datos...</td></tr>
+                            ) : properties.length === 0 ? (
+                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>No se encontraron propiedades.</td></tr>
+                            ) : properties.map(p => (
                                 <tr key={p.id}>
                                     <td>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -212,6 +219,29 @@ const Properties = () => {
                         </tbody>
                     </table>
                 </div>
+                {pagination.last_page > 1 && (
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', padding: '1rem', borderTop: '1px solid var(--border)', background: 'white' }}>
+                        <button 
+                            className="btn" 
+                            disabled={pagination.current_page === 1} 
+                            onClick={() => fetchData(pagination.current_page - 1)}
+                            style={{ padding: '0.5rem 1rem' }}
+                        >
+                            Anterior
+                        </button>
+                        <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                            Página <strong>{pagination.current_page}</strong> de {pagination.last_page}
+                        </span>
+                        <button 
+                            className="btn" 
+                            disabled={pagination.current_page === pagination.last_page} 
+                            onClick={() => fetchData(pagination.current_page + 1)}
+                            style={{ padding: '0.5rem 1rem' }}
+                        >
+                            Siguiente
+                        </button>
+                    </div>
+                )}
             </div>
 
             {showModal && (

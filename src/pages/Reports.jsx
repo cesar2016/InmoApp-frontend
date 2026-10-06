@@ -146,7 +146,7 @@ const Reports = () => {
                                 <h2 style={{ margin: 0, fontSize: '2rem' }}>Detalle de Liquidación</h2>
                             </div>
                             <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>
-                                Propietario: <strong>{liquidation.owner.first_name} {liquidation.owner.last_name}</strong>
+                                Propietario: <strong>{liquidation.owner?.first_name || 'N/A'} {liquidation.owner?.last_name || ''}</strong>
                             </p>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)', fontSize: '0.95rem' }}>
                                 <Calendar size={16} /> Periodo: {liquidation.month}/{liquidation.year}

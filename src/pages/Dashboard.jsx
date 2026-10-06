@@ -96,8 +96,8 @@ const Dashboard = () => {
                                     alignItems: 'center'
                                 }}>
                                     <div>
-                                        <div style={{ fontWeight: '600', fontSize: '0.95rem' }}>{contract.tenant.first_name} {contract.tenant.last_name}</div>
-                                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{contract.property.street} {contract.property.number}</div>
+                                        <div style={{ fontWeight: '600', fontSize: '0.95rem' }}>{contract.tenant?.first_name || 'Inquilino'} {contract.tenant?.last_name || ''}</div>
+                                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{contract.property?.street || 'Sin dirección'} {contract.property?.number || ''}</div>
                                     </div>
                                     <div style={{ textAlign: 'right' }}>
                                         <div style={{ fontSize: '0.85rem', color: '#ef4444', fontWeight: '600' }}>{contract.end_date}</div>
@@ -136,8 +136,8 @@ const Dashboard = () => {
                                     alignItems: 'center'
                                 }}>
                                     <div>
-                                        <div style={{ fontWeight: '600', fontSize: '0.95rem' }}>{contract.tenant.first_name} {contract.tenant.last_name}</div>
-                                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{contract.increase_frequency_months} meses</div>
+                                        <div style={{ fontWeight: '600', fontSize: '0.95rem' }}>{contract.tenant?.first_name || 'Inquilino'} {contract.tenant?.last_name || ''}</div>
+                                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{contract.increase_frequency_months || '-'} meses</div>
                                     </div>
                                     <button className="btn" style={{ padding: '0.5rem', background: '#f5f3ff', color: '#8b5cf6' }}>
                                         <ArrowUpRight size={18} />
@@ -179,8 +179,8 @@ const Dashboard = () => {
                                             <Users size={20} />
                                         </div>
                                         <div>
-                                            <div style={{ fontWeight: '600', fontSize: '0.95rem' }}>{contract.tenant.first_name} {contract.tenant.last_name}</div>
-                                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Período: Abril 2024</div>
+                                            <div style={{ fontWeight: '600', fontSize: '0.95rem' }}>{contract.tenant?.first_name || 'Inquilino'} {contract.tenant?.last_name || ''}</div>
+                                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Período: {contract.period_name || 'Pendiente'}</div>
                                         </div>
                                     </div>
                                     <button className="btn btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}>

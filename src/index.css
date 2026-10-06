@@ -854,6 +854,7 @@ tr:hover td {
 }
 
 /* Print Overrides */
+/* 
 @media print {
   body * {
     visibility: hidden;
@@ -882,6 +883,7 @@ tr:hover td {
     display: none !important;
   }
 }
+*/
 
 .form-actions-grid {
   display: grid;

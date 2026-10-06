@@ -10,6 +10,11 @@ const Tenants = () => {
     const { confirm } = useConfirm();
     const [tenants, setTenants] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [pagination, setPagination] = useState({
+        current_page: 1,
+        last_page: 1,
+        total: 0
+    });
     const [showModal, setShowModal] = useState(false);
     const [showReceiptModal, setShowReceiptModal] = useState(false);
     const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -39,17 +44,22 @@ const Tenants = () => {
 
     const [searchTerm, setSearchTerm] = useState('');
 
-    const fetchData = async () => {
+    const fetchData = async (page = 1, search = searchTerm) => {
         setLoading(true);
         try {
             const [tenRes, propRes, guaRes] = await Promise.all([
-                api.get('/tenants'),
-                api.get('/properties'),
-                api.get('/guarantors')
+                api.get(`/tenants?page=${page}&search=${search}`),
+                properties.length === 0 ? api.get('/properties') : Promise.resolve({ data: properties }),
+                allGuarantors.length === 0 ? api.get('/guarantors') : Promise.resolve({ data: allGuarantors })
             ]);
-            setTenants(tenRes.data);
-            setProperties(propRes.data);
-            setAllGuarantors(guaRes.data);
+            setTenants(tenRes.data.data);
+            setPagination({
+                current_page: tenRes.data.current_page,
+                last_page: tenRes.data.last_page,
+                total: tenRes.data.total
+            });
+            if (properties.length === 0) setProperties(propRes.data);
+            if (allGuarantors.length === 0) setAllGuarantors(guaRes.data);
         } catch (err) {
             console.error(err);
             error('Error al cargar datos');
@@ -59,22 +69,11 @@ const Tenants = () => {
     };
 
     useEffect(() => {
-        fetchData();
-    }, []);
-
-    const filteredTenants = tenants.filter(tenant => {
-        const search = searchTerm.toLowerCase();
-        const currentProp = tenant.contracts?.find(c => c.is_active)?.property;
-        const propAddress = currentProp ? `${currentProp.street} ${currentProp.number}`.toLowerCase() : '';
-        return (
-            tenant.first_name.toLowerCase().includes(search) ||
-            tenant.last_name.toLowerCase().includes(search) ||
-            tenant.dni.toLowerCase().includes(search) ||
-            tenant.whatsapp.toLowerCase().includes(search) ||
-            tenant.email.toLowerCase().includes(search) ||
-            propAddress.includes(search)
-        );
-    });
+        const delaySearch = setTimeout(() => {
+            fetchData(1, searchTerm);
+        }, 500);
+        return () => clearTimeout(delaySearch);
+    }, [searchTerm]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -228,38 +227,38 @@ const Tenants = () => {
                         <tbody>
                             {loading ? (
                                 <tr><td colSpan="5" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>Cargando datos...</td></tr>
-                            ) : filteredTenants.length === 0 ? (
+                            ) : tenants.length === 0 ? (
                                 <tr><td colSpan="5" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>No se encontraron inquilinos.</td></tr>
-                            ) : filteredTenants.map(tenant => {
+                            ) : tenants.map(tenant => {
                                 const activeContract = tenant.contracts?.find(c => c.is_active);
                                 return (
                                     <tr key={tenant.id}>
                                         <td>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                                                 <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(139, 92, 246, 0.1)', color: 'var(--secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
-                                                    {tenant.first_name[0]}{tenant.last_name[0]}
+                                                    {tenant.first_name?.[0] || '?'}{tenant.last_name?.[0] || ''}
                                                 </div>
-                                                <div style={{ fontWeight: '600' }}>{tenant.first_name} {tenant.last_name}</div>
+                                                <div style={{ fontWeight: '600' }}>{tenant.first_name || 'Inquilino'} {tenant.last_name || ''}</div>
                                             </div>
                                         </td>
                                         <td>
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                                                 <div style={{ fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                    <Phone size={12} color="var(--text-muted)" /> {tenant.whatsapp}
+                                                    <Phone size={12} color="var(--text-muted)" /> {tenant.whatsapp || 'N/A'}
                                                 </div>
                                                 <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                    <Mail size={12} /> {tenant.email}
+                                                    <Mail size={12} /> {tenant.email || 'N/A'}
                                                 </div>
                                             </div>
                                         </td>
-                                        <td style={{ fontSize: '0.9rem' }}>{tenant.dni}</td>
+                                        <td style={{ fontSize: '0.9rem' }}>{tenant.dni || 'N/A'}</td>
                                         <td>
                                             {activeContract ? (
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                     <div style={{ padding: '4px', background: '#ecfdf5', borderRadius: '4px', color: '#059669' }}>
                                                         <HomeIcon size={14} />
                                                     </div>
-                                                    <span style={{ fontSize: '0.9rem' }}>{activeContract.property.street} {activeContract.property.number}</span>
+                                                    <span style={{ fontSize: '0.9rem' }}>{activeContract.property?.street || 'Sin dirección'} {activeContract.property?.number || ''}</span>
                                                 </div>
                                             ) : (
                                                 <span className="badge" style={{ background: '#f1f5f9', color: '#64748b' }}>Sin Alquiler</span>
@@ -287,6 +286,29 @@ const Tenants = () => {
                         </tbody>
                     </table>
                 </div>
+                {pagination.last_page > 1 && (
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', padding: '1rem', borderTop: '1px solid var(--border)', background: 'white' }}>
+                        <button 
+                            className="btn" 
+                            disabled={pagination.current_page === 1} 
+                            onClick={() => fetchData(pagination.current_page - 1)}
+                            style={{ padding: '0.5rem 1rem' }}
+                        >
+                            Anterior
+                        </button>
+                        <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                            Página <strong>{pagination.current_page}</strong> de {pagination.last_page}
+                        </span>
+                        <button 
+                            className="btn" 
+                            disabled={pagination.current_page === pagination.last_page} 
+                            onClick={() => fetchData(pagination.current_page + 1)}
+                            style={{ padding: '0.5rem 1rem' }}
+                        >
+                            Siguiente
+                        </button>
+                    </div>
+                )}
             </div>
 
             {showModal && (
