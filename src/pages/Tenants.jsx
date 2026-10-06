@@ -119,7 +119,7 @@ const Tenants = () => {
             start_date: activeContract?.start_date || '',
             end_date: activeContract?.end_date || '',
             increase_frequency_months: activeContract?.increase_frequency_months || '6',
-            guarantor_ids: tenant.guarantors?.map(g => g.id) || []
+            guarantor_ids: Array.isArray(tenant.guarantors) ? tenant.guarantors.map(g => g.id) : []
         });
         setShowModal(true);
     };

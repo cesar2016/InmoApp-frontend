@@ -106,7 +106,7 @@ const Contracts = () => {
                     rent_amount: raw.contract?.rent_amount || '',
                     increase_frequency_months: raw.contract?.increase_frequency_months || 6
                 },
-                guarantors: raw.guarantors || []
+                guarantors: Array.isArray(raw.guarantors) ? raw.guarantors : []
             };
             
             setExtractedData(data);
@@ -408,7 +408,7 @@ const Contracts = () => {
                                         <p style={{ color: 'var(--text-muted)' }}>No se detectaron garantes en el documento.</p>
                                     ) : (
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                            {extractedData.guarantors.map((g, i) => (
+                                            {(Array.isArray(extractedData.guarantors) ? extractedData.guarantors : []).map((g, i) => (
                                                 <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: '0.75rem', alignItems: 'center', border: '1px solid var(--border)', padding: '0.75rem', borderRadius: '0.5rem' }}>
                                                     <input type="text" placeholder="Nombre" value={`${g.first_name || ''} ${g.last_name || ''}`} onChange={e => {
                                                         const [f, ...l] = e.target.value.split(' ');
