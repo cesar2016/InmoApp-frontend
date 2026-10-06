@@ -166,7 +166,7 @@ const Reports = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {liquidation.payments.map((p, i) => (
+                                {(liquidation?.payments && Array.isArray(liquidation.payments)) && liquidation.payments.map((p, i) => (
                                     <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
                                         <td style={{ padding: '1.25rem 0' }}>
                                             <div style={{ fontWeight: 600 }}>Cobro de Alquiler</div>
@@ -175,7 +175,7 @@ const Reports = () => {
                                         <td style={{ padding: '1.25rem 0', textAlign: 'right', fontWeight: 600, color: '#16a34a' }}>+ ${new Intl.NumberFormat('es-AR').format(p.amount)}</td>
                                     </tr>
                                 ))}
-                                {liquidation.maintenances.map((m, i) => (
+                                {(liquidation?.maintenances && Array.isArray(liquidation.maintenances)) && liquidation.maintenances.map((m, i) => (
                                     <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
                                         <td style={{ padding: '1.25rem 0' }}>
                                             <div style={{ fontWeight: 600 }}>Gasto: {m.description}</div>
