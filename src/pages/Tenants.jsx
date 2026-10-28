@@ -227,7 +227,7 @@ const Tenants = () => {
                         <tbody>
                             {loading ? (
                                 <tr><td colSpan="5" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>Cargando datos...</td></tr>
-                            ) : tenants.length === 0 ? (
+                            ) : !Array.isArray(tenants) || tenants.length === 0 ? (
                                 <tr><td colSpan="5" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>No se encontraron inquilinos.</td></tr>
                             ) : tenants.map(tenant => {
                                 const activeContract = tenant.contracts?.find(c => c.is_active);
@@ -376,7 +376,7 @@ const Tenants = () => {
                                 </div>
 
                                 <div style={{ maxHeight: '150px', overflowY: 'auto', background: '#fff', borderRadius: '0.75rem', border: '1px solid var(--border)', padding: '0.5rem' }}>
-                                    {filteredGuarantorsForSelect.map(g => (
+                                    {(Array.isArray(filteredGuarantorsForSelect) ? filteredGuarantorsForSelect : []).map(g => (
                                         <div key={g.id}
                                             onClick={() => toggleGuarantor(g.id)}
                                             style={{
@@ -417,7 +417,7 @@ const Tenants = () => {
                                         <label>Inmueble a Ocupar</label>
                                         <select value={formData.property_id} onChange={e => setFormData({ ...formData, property_id: e.target.value })} style={{ background: '#fff' }}>
                                             <option value="">Ninguno / Sin asignar</option>
-                                            {properties.map(p => (
+                                            {(Array.isArray(properties) ? properties : []).map(p => (
                                                 <option key={p.id} value={p.id}>{p.street} {p.number} ({p.type})</option>
                                             ))}
                                         </select>
@@ -525,7 +525,7 @@ const Tenants = () => {
                                             return <tr><td colSpan="5" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>No se encontraron pagos con esos criterios.</td></tr>;
                                         }
 
-                                        return filteredHistory.map(p => {
+                                        return (Array.isArray(filteredHistory) ? filteredHistory : []).map(p => {
                                             const monthName = monthNames[parseInt(p.period_month, 10) - 1] || p.period_month;
                                             return (
                                             <tr key={p.id} style={{ borderBottom: '1px solid var(--border)' }}>

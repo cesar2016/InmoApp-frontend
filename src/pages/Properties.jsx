@@ -134,7 +134,7 @@ const Properties = () => {
                             onChange={e => setSearchTerm(e.target.value)}
                         />
                     </div>
-                    <button className="btn btn-orange" onClick={() => { setEditingProperty(null); setFormData({ type: 'Departamento', real_estate_id: '', domain: '', street: '', number: '', floor: '', apartment: '', location: '', owner_id: '' }); setShowModal(true); }}>
+                    <button className="btn btn-orange" onClick={() => { setEditingProperty(null); setFormData({ type: 'Departamento', listing_type: 'Alquiler', real_estate_id: '', domain: '', street: '', number: '', floor: '', apartment: '', location: '', owner_id: '' }); setShowModal(true); }}>
                         <Plus size={18} /> Nuevo Inmueble
                     </button>
                 </div>
