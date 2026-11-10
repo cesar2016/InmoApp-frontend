@@ -16,4 +16,31 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error.response?.status;
+    const data = error.response?.data;
+    const code = data?.code;
+
+    if (code === 'payment_expired') {
+      localStorage.removeItem('token');
+      window.dispatchEvent(
+        new CustomEvent('app:blocked', {
+          detail: {
+            message:
+              data?.message ||
+              'Su periodo de prueba GRATUITO ha caducado, póngase en contacto con el Server Administrator',
+            code: 'payment_expired',
+          },
+        })
+      );
+    } else if (status === 401) {
+      localStorage.removeItem('token');
+    }
+
+    return Promise.reject(error);
+  }
+);
+
 export default api;

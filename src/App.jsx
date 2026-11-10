@@ -13,6 +13,7 @@ import Reports from './pages/Reports';
 import Maintenances from './pages/Maintenances';
 import Guarantors from './pages/Guarantors';
 import Layout from './components/Layout';
+import BlockedModal from './components/BlockedModal';
 import './index.css';
 
 const PrivateRoute = ({ children }) => {
@@ -30,6 +31,7 @@ function App() {
         <AuthProvider>
             <ToastProvider>
                 <ConfirmProvider>
+                    <BlockedModal />
                     <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                         <Routes>
                             <Route path="/login" element={<Login />} />

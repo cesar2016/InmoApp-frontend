@@ -20,7 +20,13 @@ const Login = () => {
             success('¡Bienvenido de nuevo!');
             navigate('/');
         } catch (err) {
-            error('Credenciales inválidas. Por favor, reintenta.');
+            const code = err.response?.data?.code;
+            const msg = err.response?.data?.message;
+            if (code === 'payment_expired') {
+                error(msg || 'Su periodo de prueba GRATUITO ha caducado, póngase en contacto con el Server Administrator');
+            } else {
+                error('Credenciales inválidas. Por favor, reintenta.');
+            }
         } finally {
             setLoading(false);
         }
